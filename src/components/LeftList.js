@@ -1,19 +1,42 @@
 import React from 'react';
-export default function LeftList({ list, onToggle }){
+
+function StatusBadge({ status }) {
+  if (status === 1) return <span className="status-badge one">1</span>;
+  if (status === 0) return <span className="status-badge zero">0</span>;
+  if (status === null) return <span className="status-badge not-found">RFID NOT FOUND</span>;
+  return <span className="status-badge unknown">-</span>;
+}
+
+export default function LeftList({ list, onToggle, disabled }) {
+  if (!list?.length) return <div className="empty-state">No devices found</div>;
+
   return (
-    <div className="left-list">
-      <ol>
-        {list.map((item, idx)=> (
-          <li key={item.id} className="left-item">
-            <span className="left-index">{idx+1}.</span>
-            <span className="left-id">{item.id}</span>
-            <label className="mini-switch">
-              <input type="checkbox" checked={item.status===1} onChange={()=>onToggle(item.id)} />
-              <span className="mini-slider"></span>
-            </label>
-          </li>
-        ))}
-      </ol>
+    <div className="devices-grid">
+      {list.map((device, index) => {
+        const isDisabled = disabled[device.id];
+        return (
+          <div key={device.id} className="device-card">
+            <div className="device-number">{index + 1}</div>
+            <div className="device-info">
+              <div className="device-id">{device.id}</div>
+              {device.lastSeen && (
+                <div className="device-seen">Last seen: {device.lastSeen}</div>
+              )}
+            </div>
+            
+            <div className="device-controls">
+              <StatusBadge status={device.status} />
+              <button
+                className={`toggle-button ${device.status === 1 ? 'active' : ''}`}
+                onClick={() => !isDisabled && onToggle(device.id, device.status === 1 ? 0 : 1)}
+                disabled={isDisabled}
+              >
+                Toggle
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
