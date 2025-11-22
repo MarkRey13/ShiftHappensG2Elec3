@@ -6,21 +6,8 @@ import { initMQTT, sendToggleMessage } from './mqtt/mqttClient';
 import './styles/app.css';
 
 export default function App() {
-  const [rfidList, setRfidList] = useState(() => {
-    const saved = localStorage.getItem('rfidList');
-    return saved ? JSON.parse(saved) : [
-      { id: '88697684', status: 1, lastSeen: null },
-      { id: '09780647', status: 1, lastSeen: null },
-      { id: '75834600', status: 0, lastSeen: null },
-      { id: '90875490', status: null, lastSeen: null }
-    ];
-  });
-
-  const [logs, setLogs] = useState(() => {
-    const saved = localStorage.getItem('logs');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [rfidList, setRfidList] = useState([]);
+  const [logs, setLogs] = useState([]);
   const [simulating, setSimulating] = useState(false);
   const [cooldowns, setCooldowns] = useState({});
   
@@ -59,8 +46,7 @@ export default function App() {
 
   const toggleLocal = useCallback((id, status) => {
     if (cooldowns[id]) return;
-    
-    if (status === null) return; // Prevent toggling if status is null
+    if (status === null) return;
     const newStatus = status === 1 ? 1 : 0;
     const now = formatDate();
 
@@ -94,21 +80,6 @@ export default function App() {
     });
     return () => client && typeof client.end === 'function' && client.end();
   }, [updateStatusFromMQTT]);
-
-  useEffect(() => {
-    let interval;
-    if (simulating) {
-      interval = setInterval(() => {
-        const list = rfidRef.current;
-        if (list.length === 0) return;
-        const idx = Math.floor(Math.random() * list.length);
-        const id = list[idx]?.id;
-        if (!id) return;
-        updateStatusFromMQTT(id, Math.random() > 0.5 ? 1 : 0);
-      }, 4000);
-    }
-    return () => clearInterval(interval);
-  }, [simulating, updateStatusFromMQTT]);
 
   return (
     <div className="app">
